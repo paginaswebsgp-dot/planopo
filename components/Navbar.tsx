@@ -1,24 +1,21 @@
 'use client';
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
-import { Sun, Moon, BookOpen, LayoutDashboard, CreditCard, Menu, X } from 'lucide-react';
+import { useUser } from './auth/UserProvider';
+import { Sun, Moon, BookOpen, LayoutDashboard, CreditCard, Menu, X, LogOut, LogIn, Crown, User } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
+  const { user, esPremium, cargando, logout } = useUser();
   const [open, setOpen] = useState(false);
-
-  const links = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/precios', label: 'Precios', icon: CreditCard },
-  ];
+  const [menuUsuario, setMenuUsuario] = useState(false);
 
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 100,
       background: 'var(--background)',
       borderBottom: '1px solid var(--card-border)',
-      backdropFilter: 'blur(12px)',
     }}>
       <nav style={{
         maxWidth: 1200, margin: '0 auto', padding: '0 16px',
@@ -34,43 +31,101 @@ export default function Navbar() {
             <BookOpen size={16} color="white" />
           </div>
           <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--foreground)', letterSpacing: '-0.02em' }}>
-            Plan<span className="gradient-text">Opo</span>
+            Plan<span style={{
+              background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>Opo</span>
           </span>
         </Link>
 
-        {/* Desktop links */}
+        {/* Desktop */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="desktop-nav">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 12px', borderRadius: 8,
-              color: 'var(--muted)', textDecoration: 'none', fontSize: 14, fontWeight: 500,
-              transition: 'color 0.15s, background 0.15s',
-            }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--foreground)';
-                (e.currentTarget as HTMLElement).style.background = 'var(--secondary)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--muted)';
-                (e.currentTarget as HTMLElement).style.background = 'transparent';
-              }}
-            >
-              <Icon size={14} />
-              {label}
+          {user && (
+            <Link href="/dashboard" style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              borderRadius: 8, color: 'var(--muted)', textDecoration: 'none', fontSize: 14, fontWeight: 500,
+            }}>
+              <LayoutDashboard size={14} /> Dashboard
             </Link>
-          ))}
-
-          <Link href="/crear" className="btn btn-primary btn-sm" style={{ marginLeft: 8 }}>
-            Crear plan
+          )}
+          <Link href="/precios" style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+            borderRadius: 8, color: 'var(--muted)', textDecoration: 'none', fontSize: 14, fontWeight: 500,
+          }}>
+            <CreditCard size={14} /> Precios
           </Link>
 
-          <button
-            onClick={toggleTheme}
-            className="btn btn-ghost btn-sm"
-            style={{ marginLeft: 4, padding: '6px', borderRadius: 8 }}
-            aria-label="Cambiar tema"
-          >
+          {!cargando && (
+            user ? (
+              <div style={{ position: 'relative', marginLeft: 8 }}>
+                <button
+                  onClick={() => setMenuUsuario(!menuUsuario)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--card-border)',
+                    background: 'var(--secondary)', cursor: 'pointer', color: 'var(--foreground)',
+                    fontSize: 13, fontWeight: 500,
+                  }}
+                >
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: esPremium ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'var(--primary-light)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {esPremium ? <Crown size={12} color="white" /> : <User size={12} color="var(--primary)" />}
+                  </div>
+                  {esPremium && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>PREMIUM</span>}
+                </button>
+                {menuUsuario && (
+                  <div style={{
+                    position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                    background: 'var(--card)', border: '1px solid var(--card-border)',
+                    borderRadius: 12, padding: 8, minWidth: 180,
+                    boxShadow: 'var(--shadow-lg)', zIndex: 200,
+                  }}>
+                    <div style={{ padding: '8px 12px', fontSize: 12, color: 'var(--muted)', borderBottom: '1px solid var(--card-border)', marginBottom: 4 }}>
+                      {user.email}
+                    </div>
+                    <Link href="/crear" onClick={() => setMenuUsuario(false)} style={{
+                      display: 'block', padding: '8px 12px', borderRadius: 8,
+                      fontSize: 13, color: 'var(--foreground)', textDecoration: 'none', fontWeight: 500,
+                    }}>
+                      ✏️ Crear plan
+                    </Link>
+                    {!esPremium && (
+                      <Link href="/precios" onClick={() => setMenuUsuario(false)} style={{
+                        display: 'block', padding: '8px 12px', borderRadius: 8,
+                        fontSize: 13, color: '#f59e0b', textDecoration: 'none', fontWeight: 600,
+                      }}>
+                        👑 Ir a Premium
+                      </Link>
+                    )}
+                    <button onClick={logout} style={{
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                      padding: '8px 12px', borderRadius: 8, background: 'none', border: 'none',
+                      fontSize: 13, color: 'var(--danger)', cursor: 'pointer', fontWeight: 500,
+                    }}>
+                      <LogOut size={13} /> Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/auth/login" style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+                  borderRadius: 8, color: 'var(--muted)', textDecoration: 'none', fontSize: 14, fontWeight: 500,
+                }}>
+                  <LogIn size={14} /> Entrar
+                </Link>
+                <Link href="/auth/registro" className="btn btn-primary btn-sm" style={{ marginLeft: 4 }}>
+                  Registrarse
+                </Link>
+              </>
+            )
+          )}
+
+          <button onClick={toggleTheme} className="btn btn-ghost btn-sm" style={{ marginLeft: 4, padding: 6 }}>
             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
         </div>
@@ -86,39 +141,30 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
       {open && (
         <div style={{
-          background: 'var(--background)',
-          borderTop: '1px solid var(--card-border)',
-          padding: '12px 16px',
-          display: 'flex', flexDirection: 'column', gap: 4,
+          background: 'var(--background)', borderTop: '1px solid var(--card-border)',
+          padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4,
         }} className="mobile-nav">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)} style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 12px', borderRadius: 8,
-              color: 'var(--foreground)', textDecoration: 'none', fontSize: 14, fontWeight: 500,
-            }}>
-              <Icon size={16} />
-              {label}
-            </Link>
-          ))}
-          <Link href="/crear" onClick={() => setOpen(false)} className="btn btn-primary" style={{ marginTop: 4 }}>
-            Crear plan
-          </Link>
+          {user && <Link href="/dashboard" onClick={() => setOpen(false)} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', textDecoration: 'none', fontSize: 14 }}>📊 Dashboard</Link>}
+          <Link href="/precios" onClick={() => setOpen(false)} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', textDecoration: 'none', fontSize: 14 }}>💰 Precios</Link>
+          {user ? (
+            <>
+              <Link href="/crear" onClick={() => setOpen(false)} className="btn btn-primary" style={{ marginTop: 4 }}>Crear plan</Link>
+              <button onClick={logout} className="btn btn-secondary" style={{ marginTop: 4 }}>Cerrar sesión</button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/login" onClick={() => setOpen(false)} className="btn btn-secondary" style={{ marginTop: 4 }}>Entrar</Link>
+              <Link href="/auth/registro" onClick={() => setOpen(false)} className="btn btn-primary" style={{ marginTop: 4 }}>Registrarse gratis</Link>
+            </>
+          )}
         </div>
       )}
 
       <style>{`
-        @media (min-width: 640px) {
-          .desktop-nav { display: flex !important; }
-          .mobile-nav { display: none !important; }
-        }
-        @media (max-width: 639px) {
-          .desktop-nav { display: none !important; }
-          .mobile-nav { display: flex !important; }
-        }
+        @media (min-width: 640px) { .desktop-nav { display: flex !important; } .mobile-nav { display: none !important; } }
+        @media (max-width: 639px) { .desktop-nav { display: none !important; } .mobile-nav { display: flex !important; } }
       `}</style>
     </header>
   );

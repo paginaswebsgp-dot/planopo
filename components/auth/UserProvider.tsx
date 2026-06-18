@@ -38,26 +38,43 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   async function cargar() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user ?? null);
 
-    if (user) {
-      const res = await fetch('/api/user');
-      const data = await res.json();
-      setPerfil(data.perfil);
+    if (session?.user) {
+      try {
+        const res = await fetch('/api/user');
+        const data = await res.json();
+        setPerfil(data.perfil);
+      } catch {
+        setPerfil(null);
+      }
     } else {
       setPerfil(null);
     }
     setCargando(false);
   }
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetch('/api/user').then(r => r.json()).then(d => setPerfil(d.perfil)).catch(() => setPerfil(null));
+      } else {
+        setPerfil(null);
+      }
+      setCargando(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   async function logout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setUser(null);
-    setPerfil(null);
     window.location.href = '/';
   }
 

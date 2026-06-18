@@ -2,11 +2,9 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, BookOpen } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -23,8 +21,7 @@ export default function LoginPage() {
       setError('Email o contraseña incorrectos');
       setCargando(false);
     } else {
-      router.push('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
     }
   }
 
@@ -39,7 +36,6 @@ export default function LoginPage() {
         borderRadius: 20, padding: '40px 36px', maxWidth: 420, width: '100%',
         boxShadow: 'var(--shadow-lg)',
       }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12, margin: '0 auto 12px',
@@ -56,52 +52,37 @@ export default function LoginPage() {
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Email</label>
             <input
-              type="email" required
-              className="input-field"
+              type="email" required className="input-field"
               placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={email} onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Contraseña</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPass ? 'text' : 'password'} required
-                className="input-field"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                className="input-field" placeholder="••••••••"
+                value={password} onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: 44 }}
               />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                style={{
-                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',
-                }}
-              >
+              <button type="button" onClick={() => setShowPass(!showPass)} style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',
+              }}>
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           {error && (
-            <div style={{
-              padding: '10px 12px', borderRadius: 8,
-              background: 'var(--danger-light)', color: 'var(--danger)', fontSize: 13,
-            }}>
+            <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--danger-light)', color: 'var(--danger)', fontSize: 13 }}>
               ❌ {error}
             </div>
           )}
 
-          <button
-            type="submit" disabled={cargando}
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '12px' }}
-          >
+          <button type="submit" disabled={cargando} className="btn btn-primary"
+            style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '12px' }}>
             {cargando ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Entrando...</> : 'Entrar'}
           </button>
         </form>
